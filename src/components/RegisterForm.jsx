@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
 
-export default function RegisterForm({ onBack }) {
+export default function RegisterForm() {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -48,17 +48,10 @@ export default function RegisterForm({ onBack }) {
 
   return (
     <div>
-      <button
-        onClick={onBack}
-        className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
-      >
-        ← Back
-      </button>
-
       <h2 className="text-3xl font-bold mb-2">Become a Partner</h2>
       <p className="text-white/70 mb-6">Fill in your details to join us</p>
 
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2">Full Name</label>
           <input
@@ -190,12 +183,12 @@ export default function RegisterForm({ onBack }) {
         </div>
 
         <button
-          onClick={handleSubmit}
+          type="submit"
           className="w-full py-4 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl text-white font-bold text-lg hover:shadow-lg hover:shadow-red-600/50 transition-all duration-300 transform hover:scale-105 mt-6"
         >
           Submit Application
         </button>
-      </div>
+      </form>
     </div>
   );
 }

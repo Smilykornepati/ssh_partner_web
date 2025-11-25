@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Hotel, Clock, Users, TrendingUp, CheckCircle, ArrowRight, Menu, X } from 'lucide-react';
-import AuthModal from './components/AuthModel';
+import AuthScreen from './components/AuthScreen';
 
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthScreen, setShowAuthScreen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +14,11 @@ export default function App() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // If auth screen is active, show only that
+  if (showAuthScreen) {
+    return <AuthScreen onBack={() => setShowAuthScreen(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -78,7 +83,7 @@ export default function App() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <button 
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => setShowAuthScreen(true)}
               className="group relative px-8 py-5 bg-gradient-to-r from-red-600 to-pink-600 rounded-full text-white font-bold text-lg shadow-2xl shadow-red-600/50 hover:shadow-red-600/70 transform hover:scale-105 transition-all duration-300"
             >
               <span className="relative z-10 flex items-center gap-2">
@@ -230,7 +235,7 @@ export default function App() {
             </p>
             
             <button 
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => setShowAuthScreen(true)}
               className="group relative px-10 py-6 bg-gradient-to-r from-red-600 to-pink-600 rounded-full text-white font-bold text-xl shadow-2xl shadow-red-600/50 hover:shadow-red-600/70 transform hover:scale-105 transition-all duration-300"
             >
               <span className="relative z-10 flex items-center gap-3">
@@ -281,8 +286,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 }
