@@ -1,3 +1,5 @@
+// [file name]: Dashboard.jsx
+
 import React, { useState } from 'react';
 import { 
   Settings, 
@@ -9,8 +11,9 @@ import {
   X
 } from 'lucide-react';
 import Operations from './Operations';
+import Rooms from './Rooms';
 
-export default function Dashboard({ onLogout }) {
+export default function Dashboard({ onLogout, user }) {
   const [activeTab, setActiveTab] = useState('operations');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -21,33 +24,13 @@ export default function Dashboard({ onLogout }) {
     { id: 'bookings', label: 'Bookings', icon: Calendar },
   ];
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'operations':
-        return <Operations />;
-      case 'rooms':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Room Management</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                <h3 className="text-lg font-bold mb-2">Available Rooms</h3>
-                <p className="text-4xl font-bold text-red-500 mb-2">24</p>
-                <p className="text-white/60">Ready for booking</p>
-              </div>
-              <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                <h3 className="text-lg font-bold mb-2">Occupied</h3>
-                <p className="text-4xl font-bold text-yellow-500 mb-2">8</p>
-                <p className="text-white/60">Currently occupied</p>
-              </div>
-              <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                <h3 className="text-lg font-bold mb-2">Maintenance</h3>
-                <p className="text-4xl font-bold text-blue-500 mb-2">3</p>
-                <p className="text-white/60">Under maintenance</p>
-              </div>
-            </div>
-          </div>
-        );
+
+        const renderContent = () => {
+            switch (activeTab) {
+              case 'operations':
+                return <Operations user={user} />;
+              case 'rooms':
+                return <Rooms user={user} />;
       case 'revenue':
         return (
           <div>
@@ -55,19 +38,19 @@ export default function Dashboard({ onLogout }) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                 <h3 className="text-lg font-bold mb-2">Today's Revenue</h3>
-                <p className="text-3xl font-bold text-green-500">₹24,500</p>
+                <p className="text-3xl font-bold text-green-500">₹0</p>
               </div>
               <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                 <h3 className="text-lg font-bold mb-2">Monthly Revenue</h3>
-                <p className="text-3xl font-bold text-red-500">₹2,45,000</p>
+                <p className="text-3xl font-bold text-red-500">₹0</p>
               </div>
               <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                 <h3 className="text-lg font-bold mb-2">Occupancy Rate</h3>
-                <p className="text-3xl font-bold text-blue-500">87%</p>
+                <p className="text-3xl font-bold text-blue-500">0%</p>
               </div>
               <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                 <h3 className="text-lg font-bold mb-2">Total Bookings</h3>
-                <p className="text-3xl font-bold text-purple-500">1,247</p>
+                <p className="text-3xl font-bold text-purple-500">0</p>
               </div>
             </div>
           </div>
@@ -142,7 +125,7 @@ export default function Dashboard({ onLogout }) {
               <span className="text-red-600">SSH</span>
               <span className="text-white"> Hotels</span>
             </div>
-            <p className="text-white/60 text-sm mt-1">Admin Dashboard</p>
+            <p className="text-white/60 text-sm mt-1">Partner Dashboard</p>
           </div>
 
           <nav className="p-4 space-y-2">
@@ -187,11 +170,15 @@ export default function Dashboard({ onLogout }) {
               </h1>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="font-semibold">Admin User</p>
-                  <p className="text-white/60 text-sm">admin@sshhotels.in</p>
+                  <p className="font-semibold">{user?.name || 'User'}</p>
+                  <p className="text-white/60 text-sm">
+                    {user?.email || user?.phone || 'user@sshhotels.in'}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
-                  <span className="font-bold">A</span>
+                  <span className="font-bold">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </span>
                 </div>
               </div>
             </div>

@@ -1,42 +1,113 @@
-import React, { useState } from 'react';
-import { Plus, Image, Trash2 } from 'lucide-react';
+// [file name]: Operations.jsx
 
-export default function Operations() {
+import React, { useState, useEffect } from 'react';
+import { Plus, Image, Trash2, Save } from 'lucide-react';
+
+export default function Operations({ user }) {
   const [hotelStatus, setHotelStatus] = useState(true);
   const [roomTypes, setRoomTypes] = useState([]);
   const [newRoomType, setNewRoomType] = useState({
     name: '',
     hourlyPrice: '',
+    roomCount: '',
     photos: []
   });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Add new room type
-  const handleAddRoomType = () => {
-    if (newRoomType.name && newRoomType.hourlyPrice) {
-      setRoomTypes([
-        ...roomTypes,
-        {
-          id: Date.now(),
-          name: newRoomType.name,
-          hourlyPrice: parseInt(newRoomType.hourlyPrice),
-          photos: newRoomType.photos
-        }
-      ]);
-      // Reset form
-      setNewRoomType({ name: '', hourlyPrice: '', photos: [] });
+  useEffect(() => {
+    if (user?.id) {
+      loadHotelSettings();
+    }
+  }, [user]);
+
+  const loadHotelSettings = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/hotel-operations/${user.id}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setHotelStatus(result.data.hotelStatus);
+        setRoomTypes(result.data.roomTypes || []);
+      }
+    } catch (error) {
+      console.error('Error loading hotel settings:', error);
+      alert('Error loading hotel settings');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle photo upload
-  const handlePhotoUpload = (e, roomId = null) => {
+  const updateHotelStatus = async (status) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/hotel-operations/${user.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ hotelStatus: status })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setHotelStatus(status);
+      } else {
+        alert('Error updating hotel status: ' + result.message);
+      }
+    } catch (error) {
+      console.error('Update hotel status error:', error);
+      alert('Error updating hotel status');
+    }
+  };
+
+  // Add new room type with file upload
+  const handleAddRoomType = async () => {
+    if (newRoomType.name && newRoomType.hourlyPrice && newRoomType.roomCount) {
+      setSaving(true);
+      try {
+        const formData = new FormData();
+        formData.append('name', newRoomType.name);
+        formData.append('hourlyPrice', newRoomType.hourlyPrice);
+        formData.append('roomCount', newRoomType.roomCount);
+        
+        // Append all photos
+        newRoomType.photos.forEach(photo => {
+          formData.append('photos', photo);
+        });
+
+        const response = await fetch(`http://localhost:8000/api/hotel-operations/${user.id}/room-types`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setRoomTypes(result.data.roomTypes);
+          setNewRoomType({ name: '', hourlyPrice: '', roomCount: '', photos: [] });
+          alert('Room type added successfully!');
+        } else {
+          alert('Error adding room type: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Add room type error:', error);
+        alert('Error adding room type');
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
+  const handlePhotoUpload = (e, roomTypeName = null) => {
     const files = Array.from(e.target.files);
-    if (roomId) {
-      setRoomTypes(roomTypes.map(room => 
-        room.id === roomId 
-          ? { ...room, photos: [...room.photos, ...files] }
-          : room
-      ));
+    
+    if (roomTypeName) {
+      // Add photos to existing room type
+      handleAddPhotos(roomTypeName, files);
     } else {
+      // Add photos to new room type
       setNewRoomType({
         ...newRoomType,
         photos: [...newRoomType.photos, ...files]
@@ -44,14 +115,38 @@ export default function Operations() {
     }
   };
 
-  // Remove photo
-  const removePhoto = (photoIndex, roomId = null) => {
-    if (roomId) {
-      setRoomTypes(roomTypes.map(room =>
-        room.id === roomId
-          ? { ...room, photos: room.photos.filter((_, index) => index !== photoIndex) }
-          : room
-      ));
+  const handleAddPhotos = async (roomTypeName, files) => {
+    try {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('photos', file);
+      });
+
+      const response = await fetch(
+        `http://localhost:8000/api/hotel-operations/${user.id}/room-types/${roomTypeName}/photos`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        setRoomTypes(result.data.roomTypes);
+        alert('Photos added successfully!');
+      } else {
+        alert('Error adding photos: ' + result.message);
+      }
+    } catch (error) {
+      console.error('Add photos error:', error);
+      alert('Error adding photos');
+    }
+  };
+
+  const removePhoto = (photoIndex, roomTypeName = null) => {
+    if (roomTypeName) {
+      alert('Photo deletion would require additional backend implementation');
     } else {
       setNewRoomType({
         ...newRoomType,
@@ -60,24 +155,38 @@ export default function Operations() {
     }
   };
 
-  // Remove room type
-  const removeRoomType = (roomId) => {
-    setRoomTypes(roomTypes.filter(room => room.id !== roomId));
+  const removeRoomType = async (roomTypeName) => {
+    if (window.confirm(`Are you sure you want to delete ${roomTypeName}?`)) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/hotel-operations/${user.id}/room-types/${roomTypeName}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setRoomTypes(result.data.roomTypes);
+          alert('Room type deleted successfully!');
+        } else {
+          alert('Error deleting room type: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Delete room type error:', error);
+        alert('Error deleting room type');
+      }
+    }
   };
 
-  // Update room type
-  const updateRoomType = (roomId, field, value) => {
-    setRoomTypes(roomTypes.map(room =>
-      room.id === roomId ? { ...room, [field]: value } : room
-    ));
-  };
-
-  // Submit all changes
-  const handleSubmitAll = () => {
-    console.log('Hotel Status:', hotelStatus ? 'Open' : 'Closed');
-    console.log('Room Types:', roomTypes);
-    alert('All changes saved successfully!');
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading hotel settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white p-6">
@@ -89,10 +198,11 @@ export default function Operations() {
             <p className="text-gray-600 mt-2">Manage your hotel settings and room types</p>
           </div>
           <button
-            onClick={handleSubmitAll}
-            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            onClick={loadHotelSettings}
+            className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-semibold flex items-center gap-2"
           >
-            Save All Changes
+            <Save size={20} />
+            Refresh Data
           </button>
         </div>
 
@@ -113,7 +223,7 @@ export default function Operations() {
                 {hotelStatus ? 'OPEN' : 'CLOSED'}
               </span>
               <button
-                onClick={() => setHotelStatus(!hotelStatus)}
+                onClick={() => updateHotelStatus(!hotelStatus)}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
                   hotelStatus ? 'bg-green-500' : 'bg-red-500'
                 }`}
@@ -136,7 +246,7 @@ export default function Operations() {
           <div className="bg-gray-50 rounded-lg p-6 mb-8 border-2 border-dashed border-gray-300">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Room Type</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Room Type Name *
@@ -148,13 +258,6 @@ export default function Operations() {
                   placeholder="e.g., Standard Room, Deluxe Suite"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900 placeholder-gray-500"
                 />
-                <div className="mt-1 text-sm text-gray-500">
-                  {newRoomType.name ? (
-                    <span className="text-green-600">✓ You entered: <strong>{newRoomType.name}</strong></span>
-                  ) : (
-                    "Enter a name for this room type"
-                  )}
-                </div>
               </div>
               
               <div>
@@ -168,13 +271,19 @@ export default function Operations() {
                   placeholder="Enter hourly price"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900 placeholder-gray-500"
                 />
-                <div className="mt-1 text-sm text-gray-500">
-                  {newRoomType.hourlyPrice ? (
-                    <span className="text-green-600">✓ Price set: <strong>₹{newRoomType.hourlyPrice}/hour</strong></span>
-                  ) : (
-                    "Set the hourly rate for this room"
-                  )}
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Rooms *
+                </label>
+                <input
+                  type="number"
+                  value={newRoomType.roomCount}
+                  onChange={(e) => setNewRoomType({...newRoomType, roomCount: e.target.value})}
+                  placeholder="e.g., 10, 20, 30"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900 placeholder-gray-500"
+                />
               </div>
             </div>
 
@@ -184,7 +293,6 @@ export default function Operations() {
                 Room Photos {newRoomType.photos.length > 0 && `(${newRoomType.photos.length})`}
               </label>
               
-              {/* Photo Previews */}
               {newRoomType.photos.length > 0 ? (
                 <div className="flex flex-wrap gap-4 mb-4">
                   {newRoomType.photos.map((photo, index) => (
@@ -207,7 +315,6 @@ export default function Operations() {
                 <p className="text-sm text-gray-500 mb-4">No photos added yet</p>
               )}
 
-              {/* Upload Button */}
               <input
                 type="file"
                 accept="image/*"
@@ -227,11 +334,11 @@ export default function Operations() {
 
             <button
               onClick={handleAddRoomType}
-              disabled={!newRoomType.name || !newRoomType.hourlyPrice}
+              disabled={!newRoomType.name || !newRoomType.hourlyPrice || !newRoomType.roomCount || saving}
               className="flex items-center gap-3 px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
             >
               <Plus size={20} />
-              Add Room Type
+              {saving ? 'Adding...' : 'Add Room Type'}
             </button>
           </div>
 
@@ -250,43 +357,29 @@ export default function Operations() {
                 <p className="text-gray-500">Start by adding your first room type above</p>
               </div>
             ) : (
-              roomTypes.map((room) => (
-                <div key={room.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              roomTypes.map((roomType) => (
+                <div key={roomType._id || roomType.name} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                   <div className="flex justify-between items-start mb-6">
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Room Type Name
-                        </label>
-                        <input
-                          type="text"
-                          value={room.name}
-                          onChange={(e) => updateRoomType(room.id, 'name', e.target.value)}
-                          placeholder="Enter room type name"
-                          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900 placeholder-gray-500"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Hourly Price
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600 font-medium">₹</span>
-                          <input
-                            type="number"
-                            value={room.hourlyPrice}
-                            onChange={(e) => updateRoomType(room.id, 'hourlyPrice', parseInt(e.target.value) || 0)}
-                            placeholder="Enter hourly price"
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900 placeholder-gray-500 w-32"
-                          />
-                          <span className="text-gray-600">per hour</span>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">{roomType.name}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Hourly Price</p>
+                          <p className="text-lg font-bold text-gray-900">₹{roomType.hourlyPrice}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Room Count</p>
+                          <p className="text-lg font-bold text-gray-900">{roomType.roomCount}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Created Rooms</p>
+                          <p className="text-lg font-bold text-gray-900">{roomType.rooms?.length || 0}</p>
                         </div>
                       </div>
                     </div>
                     
                     <button
-                      onClick={() => removeRoomType(room.id)}
+                      onClick={() => removeRoomType(roomType.name)}
                       className="text-red-500 hover:text-red-700 transition-colors ml-4 p-2"
                       title="Delete room type"
                     >
@@ -294,29 +387,42 @@ export default function Operations() {
                     </button>
                   </div>
 
+                  {/* Room Status Summary */}
+                  {roomType.rooms && roomType.rooms.length > 0 && (
+                    <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Room Status Summary</h4>
+                      <div className="flex gap-4 text-sm">
+                        <span className="text-green-600">
+                          Vacant: {roomType.rooms.filter(r => r.status === 'vacant').length}
+                        </span>
+                        <span className="text-red-600">
+                          Booked: {roomType.rooms.filter(r => r.status === 'booked').length}
+                        </span>
+                        <span className="text-yellow-600">
+                          Maintenance: {roomType.rooms.filter(r => r.status === 'maintenance').length}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Photos Section */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Room Photos {room.photos.length > 0 && `(${room.photos.length})`}
+                      Room Photos {roomType.photos?.length > 0 && `(${roomType.photos.length})`}
                     </label>
                     
-                    {/* Photo Previews */}
-                    {room.photos.length > 0 ? (
+                    {roomType.photos?.length > 0 ? (
                       <div className="flex flex-wrap gap-4 mb-4">
-                        {room.photos.map((photo, index) => (
+                        {roomType.photos.map((photo, index) => (
                           <div key={index} className="relative group">
                             <img
-                              src={URL.createObjectURL(photo)}
-                              alt={`${room.name} photo ${index + 1}`}
+                              src={`http://localhost:8000${photo}`}
+                              alt={`${roomType.name} photo ${index + 1}`}
                               className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                              onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/96?text=No+Image';
+                              }}
                             />
-                            <button
-                              onClick={() => removePhoto(index, room.id)}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                              title="Remove photo"
-                            >
-                              <Trash2 size={14} />
-                            </button>
                           </div>
                         ))}
                       </div>
@@ -324,17 +430,16 @@ export default function Operations() {
                       <p className="text-sm text-gray-500 mb-4">No photos added for this room type</p>
                     )}
 
-                    {/* Add More Photos */}
                     <input
                       type="file"
                       accept="image/*"
                       multiple
-                      onChange={(e) => handlePhotoUpload(e, room.id)}
+                      onChange={(e) => handlePhotoUpload(e, roomType.name)}
                       className="hidden"
-                      id={`room-photos-${room.id}`}
+                      id={`room-photos-${roomType._id || roomType.name}`}
                     />
                     <label
-                      htmlFor={`room-photos-${room.id}`}
+                      htmlFor={`room-photos-${roomType._id || roomType.name}`}
                       className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-red-500 transition-colors bg-white text-gray-700"
                     >
                       <Image size={16} />

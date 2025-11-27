@@ -27,7 +27,7 @@ export default function App() {
 
   // If user is logged in, show dashboard
   if (user) {
-    return <Dashboard onLogout={handleLogout} />;
+    return <Dashboard onLogout={handleLogout} user={user} />;
   }
 
   // If auth screen is active, show that
@@ -37,7 +37,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      {/* Rest of the existing App.jsx content remains exactly the same */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-red-700 via-purple-900 to-black opacity-60"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(207,4,41,0.3),transparent_50%)]"></div>
@@ -77,7 +76,6 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Rest of the landing page content remains exactly the same */}
       <section className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-20">
         <div className="max-w-5xl mx-auto text-center">
           <div className="mb-6 inline-block">
