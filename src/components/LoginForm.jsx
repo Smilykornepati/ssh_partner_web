@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
-export default function LoginForm() {
+export default function LoginForm({ onLogin }) {
   const [formData, setFormData] = useState({
-    phone: '',
+    email: '',
     password: ''
   });
 
@@ -15,8 +15,19 @@ export default function LoginForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Login Data:', formData);
-    alert('Login submitted! Check console for data.');
+    
+    // Check for admin credentials
+    if (formData.email === 'admin@sshhotels.in' && formData.password === 'Smily@2003') {
+      // Call the onLogin callback to redirect to dashboard
+      onLogin({
+        email: formData.email,
+        name: 'Admin User',
+        role: 'admin'
+      });
+    } else {
+      console.log('Login Data:', formData);
+      alert('Invalid credentials! Please try again.');
+    }
   };
 
   return (
@@ -26,13 +37,13 @@ export default function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Phone Number</label>
+          <label className="block text-sm font-medium mb-2">Email Address</label>
           <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
+            type="email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
-            placeholder="+91 9876543210"
+            placeholder="admin@sshhotels.in"
             required
             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-red-600 transition-colors"
           />

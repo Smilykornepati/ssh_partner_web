@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, CheckCircle } from 'lucide-react';
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -12,6 +12,8 @@ export default function RegisterForm() {
     hygienePics: [],
     view360: []
   });
+
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -43,8 +45,31 @@ export default function RegisterForm() {
       }
     });
     
-    alert('Registration submitted! Check console for data.');
+    // Show success message
+    setSubmitted(true);
   };
+
+  // Show success screen after submission
+  if (submitted) {
+    return (
+      <div className="text-center">
+        <CheckCircle size={64} className="mx-auto mb-6 text-green-500" />
+        <h2 className="text-3xl font-bold mb-4">Application Received!</h2>
+        <p className="text-white/70 mb-6 text-lg">
+          Your details have been received and are under review. We will finish verification and reach out in 2 business days.
+        </p>
+        <div className="bg-white/10 rounded-xl p-6 mt-8">
+          <h3 className="text-xl font-bold mb-4">What's Next?</h3>
+          <ul className="text-white/70 space-y-2 text-left">
+            <li>• Our team will verify your documents</li>
+            <li>• We'll conduct a quick property inspection</li>
+            <li>• You'll get access to your partner dashboard</li>
+            <li>• Start receiving bookings immediately after approval</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

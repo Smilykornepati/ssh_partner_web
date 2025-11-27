@@ -4,7 +4,7 @@ import ChoiceScreen from './ChoiceScreen';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 
-export default function AuthScreen({ onBack }) {
+export default function AuthScreen({ onBack, onLogin }) {
   const [authType, setAuthType] = useState(null);
 
   return (
@@ -44,7 +44,7 @@ export default function AuthScreen({ onBack }) {
                 </p>
               </div>
             )}
-            {authType === 'login' && <LoginForm />}
+            {authType === 'login' && <LoginForm onLogin={onLogin} />}
             {authType === 'register' && <RegisterForm />}
           </div>
         </div>

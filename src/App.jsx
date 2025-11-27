@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Hotel, Clock, Users, TrendingUp, CheckCircle, ArrowRight, Menu, X } from 'lucide-react';
 import AuthScreen from './components/AuthScreen';
+import Dashboard from './components/Dashboard';
 
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAuthScreen, setShowAuthScreen] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,13 +17,27 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // If auth screen is active, show only that
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  // If user is logged in, show dashboard
+  if (user) {
+    return <Dashboard onLogout={handleLogout} />;
+  }
+
+  // If auth screen is active, show that
   if (showAuthScreen) {
-    return <AuthScreen onBack={() => setShowAuthScreen(false)} />;
+    return <AuthScreen onBack={() => setShowAuthScreen(false)} onLogin={handleLogin} />;
   }
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
+      {/* Rest of the existing App.jsx content remains exactly the same */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-red-700 via-purple-900 to-black opacity-60"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(207,4,41,0.3),transparent_50%)]"></div>
@@ -61,6 +77,7 @@ export default function App() {
         </div>
       </nav>
 
+      {/* Rest of the landing page content remains exactly the same */}
       <section className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-20">
         <div className="max-w-5xl mx-auto text-center">
           <div className="mb-6 inline-block">
