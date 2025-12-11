@@ -13,6 +13,7 @@ import {
 import Operations from './Operations';
 import Rooms from './Rooms';
 
+
 export default function Dashboard({ onLogout, user }) {
   const [activeTab, setActiveTab] = useState('operations');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,7 +25,12 @@ export default function Dashboard({ onLogout, user }) {
     { id: 'bookings', label: 'Bookings', icon: Calendar },
   ];
 
-
+  const handleLogout = () => {
+    // Clear tokens from api service
+    apiService.clearTokens();
+    // Call parent logout handler
+    onLogout();
+  };
         const renderContent = () => {
             switch (activeTab) {
               case 'operations':
@@ -63,7 +69,7 @@ export default function Dashboard({ onLogout, user }) {
               <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                 <h3 className="text-lg font-bold mb-4">Today's Check-ins</h3>
                 <div className="space-y-3">
-                  {[1, 2, 3].map((item) => (
+                  {[1].map((item) => (
                     <div key={item} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                       <div>
                         <p className="font-semibold">Room {item}0{item}</p>
@@ -80,7 +86,7 @@ export default function Dashboard({ onLogout, user }) {
                   {[1, 2].map((item) => (
                     <div key={item} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                       <div>
-                        <p className="font-semibold">Room {item}0{item + 2}</p>
+                        <p className="font-semibold">Room {item}</p>
                         <p className="text-white/60 text-sm">Guest Name</p>
                       </div>
                       <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-sm">11:00 AM</span>
